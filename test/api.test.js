@@ -115,6 +115,38 @@ describe("GET", () => {
         ],
       });
     });
+    test('status 200, duplicated ingredients should have values combined into one ingredient entry', async() => {
+      const {
+        body: { recipe },
+      } = await request.get("/api/recipes/recipe-77").expect(200);
+      expect(recipe).not.toEqual({});
+      expect(recipe).toEqual({
+        "id": "recipe-77",
+        "imageUrl": "http://www.images.com/25",
+        "instructions": "blend with oat milk and ice, sprinkle with salt",
+        "ingredients": [
+          { "name": "coconut", "grams": 71 },
+          { "name": "lime", "grams": 153 },
+          { "name": "oat milk", "grams": 31 }
+        ]
+      });
+    })
+    test('status 200, duplicated ingredients should have values combined into one ingredient entry even if duplicate entries are not next to each other in array', async() => {
+      const {
+        body: { recipe },
+      } = await request.get("/api/recipes/recipe-1").expect(200);
+      expect(recipe).not.toEqual({});
+      expect(recipe).toEqual(    {
+        "id": "recipe-1",
+        "imageUrl": "http://www.images.com/15",
+        "instructions": "spin it, twist it, pull it, flick it... bop it!",
+        "ingredients": [
+          { "name": "apple juice", "grams": 244 },
+          { "name": "coffee", "grams": 35 },
+          { "name": "raisins", "grams": 183 },
+        ]
+      });
+    })
   });
 });
 
@@ -194,5 +226,5 @@ describe("POST", () => {
 });
 
 // with more time:
-// formatted returned data in get requests to combine weights in duplicate ingredients
+// add formatting duplicate ingredients to fetchRecipes instead of just fetchRecipeByID
 // add error testing and error handling middleware, eg tests for incorrect id input, non existent id, missing, incorrect, extra properties/info on sent body.
