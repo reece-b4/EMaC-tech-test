@@ -1,8 +1,8 @@
 const { fetchRecipes } = require('../models/recipes.models')
 
 exports.getRecipes = (req, res) => {
-    // console.log('controller')
-    fetchRecipes().then((recipes)=>{
+    const query = req.query;
+    fetchRecipes(query).then((recipes)=>{
         res.status(200).send({recipes})
     })
     .catch((err)=>{
