@@ -84,4 +84,25 @@ describe("GET", () => {
       });
     });
   });
+  describe('/recipes/:id', () => {
+    test.only('status 200. Responds with recipe object on key of recipe', async () => {
+      let {
+        body: { recipe },
+      } = await request
+      .get("/api/recipes/recipe-84")
+      .expect(200);
+      expect(recipe).not.toEqual({})
+      expect(recipe).toEqual({
+        "id": "recipe-84",
+        "imageUrl": "http://www.images.com/12",
+        "instructions": "spin it, twist it, pull it, flick it... bop it!",
+        "ingredients": [
+          { "name": "apple juice", "grams": 1 },
+          { "name": "linseed", "grams": 79 },
+          { "name": "kale", "grams": 48 },
+          { "name": "grapes", "grams": 10 }
+        ]
+      })
+    })
+  })
 });
