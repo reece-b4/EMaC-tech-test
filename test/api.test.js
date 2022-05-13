@@ -4,6 +4,18 @@ const { readFile, writeFile } = require("fs/promises");
 
 const request = supertest(server);
 
+// seed before each test
+beforeEach(async ()=>{
+  const seed = await readFile("./data/backupData.json", "utf8").catch(
+    (err) => {
+      console.log(err);
+    }
+  );
+  await writeFile("./data/data.json", seed).catch((err) => {
+    console.log(err, "err");
+  });
+})
+
 test("/api", async () => {
   const { body } = await request.get("/api").expect(200);
   expect(body.message).toBe("ok");
@@ -109,16 +121,6 @@ describe("GET", () => {
 describe("POST", () => {
   describe("/recipes", () => {
     test("status 201, Adds recipe to array of recipes in data.json. Responds with newly generated id", async () => {
-      const seed = await readFile("./data/backupData.json", "utf8").catch(
-        (err) => {
-          console.log(err);
-        }
-      );
-
-      await writeFile("./data/data.json", seed).catch((err) => {
-        console.log(err, "err");
-      });
-
       const {
         body: { id },
       } = await request
@@ -137,6 +139,7 @@ describe("POST", () => {
       expect(id).not.toEqual(undefined);
       expect(id).toEqual("recipe-100");
 
+      // check recipe has been added
       const {
         body: { recipe },
       } = await request.get("/api/recipes/recipe-100").expect(200);
@@ -152,10 +155,44 @@ describe("POST", () => {
           { name: "oat milk", grams: 100 },
         ],
       });
+    });
+    test("status 201, Adds recipe to array of recipes in data.json. Responds with newly generated id", async () => {
+      const {
+        body: { id },
+      } = await request
+        .post("/api/recipes")
+        .send({
+          "imageUrl": "http://www.images.com/5",
+          "instructions": "serve deconstructed on a wooden board",
+          "ingredients": [
+            {
+              "name": "milk",
+              "grams": 187
+            },
+            {
+              "name": "cocoa nibs",
+              "grams": 88
+            },
+            {
+              "name": "lemon juice",
+              "grams": 177
+            }
+          ]
+        })
+        .expect(201);
+      expect(id).not.toEqual(undefined);
+      expect(id).toEqual("recipe-87")
 
-      await writeFile("./data/data.json", seed).catch((err) => {
-        console.log(err, "err");
-      });
+      // check for duplication
+      const {
+        body: { recipes },
+      } = await request.get("/api/recipes").expect(200);
+      expect(recipes).not.toEqual([]);
+      expect(recipes.length).toBe(100);
     });
   });
 });
+
+// with more time:
+// formatted returned data in get requests to combine weights in duplicate ingredients
+// add error testing and error handling middleware, eg tests for incorrect id input, non existent id, missing, incorrect, extra properties/info on sent body.
