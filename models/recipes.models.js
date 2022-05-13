@@ -1,4 +1,5 @@
 const {readFile, writeFile} = require('fs/promises');
+const recipesRouter = require('../routes/recipes');
 
 exports.fetchRecipes = async (query) => {
     const recipes = await readFile('./data/data.json', 'utf8');
@@ -35,10 +36,26 @@ exports.fetchRecipes = async (query) => {
 
 exports.fetchRecipeById = async (id) => {
     const recipes = await this.fetchRecipes();
-    const recipe = recipes.filter((recipe)=>{
+    const wantedRecipe = recipes.filter((recipe)=>{
        return recipe.id === id;
     })
-    return recipe[0]
+
+    //check for duplicate ingredients
+    const recipe = wantedRecipe[0]
+    const {ingredients} = wantedRecipe[0]
+    // iterate through every pair combination without repeating
+    for (let i = 0; i <= ingredients.length-1; i++) {
+        for (let j = i+1; j <= ingredients.length-1; j++) {
+            // if duplicate, add gram value at j to i and delete entry at j
+            if (ingredients[i].name === ingredients[j].name) {
+                ingredients[i].grams += ingredients[j].grams
+                ingredients.splice(j, 1)
+                recipe.ingredients = ingredients
+            }
+        }
+    }
+
+    return recipe
 }
 
 
