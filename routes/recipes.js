@@ -1,7 +1,9 @@
 const recipesRouter = require('express').Router();
-const { getRecipes, getRecipeById } = require('../controllers/recipes.controllers')
+const { getRecipes, getRecipeById, postRecipe } = require('../controllers/recipes.controllers')
 
-recipesRouter.route('/').get(getRecipes)
+recipesRouter.route('/')
+.get(getRecipes)
+.post(postRecipe)
 recipesRouter.route('/:id').get(getRecipeById)
 
 module.exports = recipesRouter;

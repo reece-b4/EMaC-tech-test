@@ -1,5 +1,6 @@
 const supertest = require("supertest");
 const server = require("../server");
+const { readFile, writeFile } = require("fs/promises");
 
 const request = supertest(server);
 
@@ -58,11 +59,11 @@ describe("GET", () => {
       });
     });
     test('Query caters for singulars and plurals that should end in "y" or "ies"eg, strawberry/strawberries. Responds with array of recipes not containing excluded ingredients on key of recipes', async () => {
-      let {
+      const {
         body: { recipes },
       } = await request
-      .get("/api/recipes?exclude_ingredients=strawberry")
-      .expect(200);
+        .get("/api/recipes?exclude_ingredients=strawberry")
+        .expect(200);
       expect(recipes).not.toEqual([]);
       recipes.forEach((recipe) => {
         recipe.ingredients.forEach((ingredient) => {
@@ -71,11 +72,11 @@ describe("GET", () => {
       });
     });
     test('Query caters for ingredients with spaces eg "lemon juice". Responds with array of recipes not containing excluded ingredients on key of recipes', async () => {
-      let {
+      const {
         body: { recipes },
       } = await request
-      .get("/api/recipes?exclude_ingredients=lemonjuice")
-      .expect(200);
+        .get("/api/recipes?exclude_ingredients=lemonjuice")
+        .expect(200);
       expect(recipes).not.toEqual([]);
       recipes.forEach((recipe) => {
         recipe.ingredients.forEach((ingredient) => {
@@ -84,25 +85,77 @@ describe("GET", () => {
       });
     });
   });
-  describe('/recipes/:id', () => {
-    test.only('status 200. Responds with recipe object on key of recipe', async () => {
-      let {
+  describe("/recipes/:id", () => {
+    test("status 200. Responds with recipe object on key of recipe", async () => {
+      const {
         body: { recipe },
-      } = await request
-      .get("/api/recipes/recipe-84")
-      .expect(200);
-      expect(recipe).not.toEqual({})
+      } = await request.get("/api/recipes/recipe-84").expect(200);
+      expect(recipe).not.toEqual({});
       expect(recipe).toEqual({
-        "id": "recipe-84",
-        "imageUrl": "http://www.images.com/12",
-        "instructions": "spin it, twist it, pull it, flick it... bop it!",
-        "ingredients": [
-          { "name": "apple juice", "grams": 1 },
-          { "name": "linseed", "grams": 79 },
-          { "name": "kale", "grams": 48 },
-          { "name": "grapes", "grams": 10 }
-        ]
-      })
-    })
-  })
+        id: "recipe-84",
+        imageUrl: "http://www.images.com/12",
+        instructions: "spin it, twist it, pull it, flick it... bop it!",
+        ingredients: [
+          { name: "apple juice", grams: 1 },
+          { name: "linseed", grams: 79 },
+          { name: "kale", grams: 48 },
+          { name: "grapes", grams: 10 },
+        ],
+      });
+    });
+  });
+});
+
+describe("POST", () => {
+  describe("/recipes", () => {
+    test("status 201, Adds recipe to array of recipes in data.json. Responds with newly generated id", async () => {
+      const seed = await readFile("./data/backupData.json", "utf8").catch(
+        (err) => {
+          console.log(err);
+        }
+      );
+
+      await writeFile("./data/data.json", seed).catch((err) => {
+        console.log(err, "err");
+      });
+
+      const {
+        body: { id },
+      } = await request
+        .post("/api/recipes")
+        .send({
+          imageUrl: "http://www.images.com/65",
+          instructions: "freestyle",
+          ingredients: [
+            { name: "banana", grams: 30 },
+            { name: "flax", grams: 15 },
+            { name: "lemon juice", grams: 25 },
+            { name: "oat milk", grams: 100 },
+          ],
+        })
+        .expect(201);
+      expect(id).not.toEqual(undefined);
+      expect(id).toEqual("recipe-100");
+
+      const {
+        body: { recipe },
+      } = await request.get("/api/recipes/recipe-100").expect(200);
+      expect(recipe).not.toEqual({});
+      expect(recipe).toEqual({
+        id: "recipe-100",
+        imageUrl: "http://www.images.com/65",
+        instructions: "freestyle",
+        ingredients: [
+          { name: "banana", grams: 30 },
+          { name: "flax", grams: 15 },
+          { name: "lemon juice", grams: 25 },
+          { name: "oat milk", grams: 100 },
+        ],
+      });
+
+      await writeFile("./data/data.json", seed).catch((err) => {
+        console.log(err, "err");
+      });
+    });
+  });
 });

@@ -1,4 +1,5 @@
-const {readFile} = require('fs/promises');
+const { json } = require('express');
+const {readFile, writeFile} = require('fs/promises');
 
 exports.fetchRecipes = async (query) => {
     const recipes = await readFile('./data/data.json', 'utf8');
@@ -12,7 +13,7 @@ exports.fetchRecipes = async (query) => {
                 excludedIngredientsArr.push(ingredientSRemoved)
             }
             if (ingredient[ingredient.length-1] === 'y') {
-                const ingredientYToIes = ingredient.replace(/(y$)/, 'ies')
+                const ingredientYToIes = ingredient.replace(/y$/, 'ies')
                 excludedIngredientsArr.push(ingredientYToIes)
             }
             if (excludedIngredientsArr.includes('lemonjuice')) {
@@ -36,4 +37,23 @@ exports.fetchRecipeById = async (id) => {
        return recipe.id === id;
     })
     return recipe[0]
+}
+
+exports.addRecipe = async (recipe) => {
+    const recipes = await this.fetchRecipes();
+
+    const recipeIds = recipes.map((recipe)=>{
+        return recipe.id.match(/\d+$/)[0]
+    })
+
+    const largestId = Math.max(...recipeIds)
+
+    recipe.id = `recipe-${largestId+1}`
+
+    const recipesAddRecipe = [...recipes, recipe]
+
+    await writeFile('./data/data.json', JSON.stringify(recipesAddRecipe, null, 2))
+
+    return recipe.id
+    
 }
