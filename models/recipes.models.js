@@ -4,7 +4,7 @@ exports.fetchRecipes = async (query) => {
     const recipes = await readFile('./data/data.json', 'utf8');
     const parsedRecipes = JSON.parse(recipes);
 
-    if (query.exclude_ingredients) {
+    if (query?.exclude_ingredients) {
         const excludedIngredientsArr = query.exclude_ingredients.split(',')
         excludedIngredientsArr.forEach((ingredient)=>{
             if (ingredient[ingredient.length-1] === 's') {
@@ -20,14 +20,20 @@ exports.fetchRecipes = async (query) => {
             }
         })
 
-        const filteredRecipes = parsedRecipes.filter(({ingredients})=>{
-           return !ingredients.some(({name})=>{
+        const filteredRecipes = parsedRecipes.filter((recipe)=>{
+           return !recipe.ingredients.some(({name})=>{
                return excludedIngredientsArr.includes(name)
             })
         })
         return filteredRecipes
     }
     return parsedRecipes
+}
 
-
+exports.fetchRecipeById = async (id) => {
+    const recipes = await this.fetchRecipes();
+    const recipe = recipes.filter((recipe)=>{
+       return recipe.id === id;
+    })
+    return recipe[0]
 }
